@@ -103,3 +103,19 @@ model SyncLog {
   @@index([integrationId])
   @@index([createdAt])
 }
+
+model PluginExecutionLog {
+  id         String   @id @default(uuid())
+  pluginId   String
+  operation  String   // "test" | "execute"
+  action     String?  // Action ID for execute, null for test
+  userId     String?
+  status     String   // "success" | "error"
+  message    String?
+  durationMs Int?
+  createdAt  DateTime @default(now())
+
+  @@index([pluginId])
+  @@index([createdAt])
+  @@index([status])
+}

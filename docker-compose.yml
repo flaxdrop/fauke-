@@ -23,6 +23,7 @@ services:
     restart: unless-stopped
     ports:
       - "3001:3001"
+      - "5555:5555"
     environment:
       DATABASE_URL: postgresql://fauke:fauke_dev@db:5432/fauke?schema=public
       PORT: "3001"

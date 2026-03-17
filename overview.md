@@ -41,11 +41,13 @@ A self-hosted, Docker-based web app with:
 │  ┌──────────────┐  ┌────────────────────┐   │
 │  │ Calendar View │  │   Table View       │   │
 │  └──────────────┘  └────────────────────┘   │
+│     + Admin Panel (Integrations/Plugins)    │
 └──────────────┬──────────────────────────────┘
                │ REST API (JSON)
 ┌──────────────▼──────────────────────────────┐
 │           Express API Server                │
-│  /api/entries  /api/export  /api/projects   │
+│  /api/auth  /api/projects  /api/entries     │
+│  /api/export  /api/admin/*  /api/plugins    │
 └──────────────┬──────────────────────────────┘
                │ Prisma ORM
 ┌──────────────▼──────────────────────────────┐
@@ -79,13 +81,14 @@ A self-hosted, Docker-based web app with:
 - [x] CRUD for projects & time entries
 - [x] CSV export
 - [x] PDF export
-- [ ] Basic auth (single-user, env-based password)
+- [x] Basic auth (single-user)
 
 ### v2.0 — Plugin System
-- [ ] Plugin API: define sync targets in JS/TS modules
-- [ ] Built-in plugin UI to configure & trigger syncs
-- [ ] Example plugins: CSV upload, REST POST, Jira Tempo
-- [ ] Webhook support for real-time push
+- [x] Plugin API: define sync targets in JS/TS modules
+- [x] Built-in plugin UI to configure & trigger syncs
+- [x] Example plugin: generic REST POST
+- [x] Webhook notification plugin support
+- [ ] Example plugins: CSV upload, Jira Tempo
 
 ### v3.0 — Multi-user & Teams
 - [ ] User accounts & auth (OAuth / magic link)

@@ -1,4 +1,4 @@
-import { Project, TimeEntry, LoginResponse, User, AdminUser, ProviderInfo, Integration, TestResult, SyncResult, SyncLog } from "./types";
+import { Project, TimeEntry, LoginResponse, User, AdminUser, ProviderInfo, Integration, TestResult, SyncResult, SyncLog, Plugin, PluginStats, ActionResult, PluginExecutionLog } from "./types";
 
 const BASE = "/api";
 
@@ -227,3 +227,33 @@ export const syncIntegration = (integrationId: string, userId: string, from: str
 
 export const getIntegrationLogs = (integrationId: string) =>
   request<SyncLog[]>(`/admin/integrations/${integrationId}/logs`);
+
+// ── Plugins (v2.0) ────────────────────────────────────────
+
+export const getPlugins = () =>
+  request<{ plugins: Plugin["metadata"][]; stats: PluginStats }>("/plugins");
+
+export const getPlugin = (id: string) =>
+  request<Plugin>(`/plugins/${id}`);
+
+export const testPlugin = (id: string, config: Record<string, any>) =>
+  request<ActionResult>(`/plugins/${id}/test`, {
+    method: "POST",
+    body: JSON.stringify({ config }),
+  });
+
+export const executePluginAction = (id: string, action: string, config: Record<string, any>, params?: any) =>
+  request<ActionResult>(`/plugins/${id}/execute`, {
+    method: "POST",
+    body: JSON.stringify({ action, config, params }),
+  });
+
+export const getPluginsByCategory = (category: string) =>
+  request<{ plugins: Plugin["metadata"][] }>(`/plugins/category/${category}`);
+
+export const getRecentPluginLogs = (limit = 10, pluginId?: string) => {
+  const params = new URLSearchParams();
+  params.set("limit", String(limit));
+  if (pluginId) params.set("pluginId", pluginId);
+  return request<{ logs: PluginExecutionLog[] }>(`/plugins/logs/recent?${params.toString()}`);
+};

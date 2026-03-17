@@ -92,10 +92,11 @@
 
 ---
 
-## v2.0 — Plugin System (future)
-- [ ] Define plugin interface (`IFaukePlugin`)
-- [ ] Plugin registry & config UI
-- [ ] Example: generic REST POST plugin
+## v2.0 — Plugin System
+- [x] Define plugin interface (`IFaukePlugin`)
+- [x] Plugin registry & config UI
+- [x] Example: generic REST POST plugin
+- [x] Example: webhook notification plugin
 - [ ] Example: CSV-upload plugin
 - [ ] Example: Jira Tempo plugin
 - [ ] Plugin execution log / history

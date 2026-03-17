@@ -98,3 +98,89 @@ export interface SyncResult {
   entriesSynced: number;
   message?: string;
 }
+
+// ── Plugins (v2.0) ────────────────────────────────────────
+
+export type PluginCategory =
+  | "integration"
+  | "export"
+  | "import"
+  | "notification"
+  | "utility"
+  | "other";
+
+export type ConfigFieldType =
+  | "text"
+  | "password"
+  | "email"
+  | "url"
+  | "number"
+  | "select"
+  | "multiselect"
+  | "checkbox"
+  | "textarea"
+  | "json";
+
+export interface PluginConfigField {
+  key: string;
+  label: string;
+  type: ConfigFieldType;
+  description?: string;
+  required: boolean;
+  default?: any;
+  options?: string[];
+  sensitive?: boolean;
+}
+
+export interface PluginMetadata {
+  id: string;
+  name: string;
+  version: string;
+  author: string;
+  description: string;
+  category: PluginCategory;
+  homepage?: string;
+  repository?: string;
+  license?: string;
+  keywords?: string[];
+  icon?: string;
+}
+
+export interface PluginAction {
+  id: string;
+  name: string;
+  description: string;
+  params?: PluginConfigField[];
+}
+
+export interface Plugin {
+  metadata: PluginMetadata;
+  configSchema: PluginConfigField[];
+  actions: PluginAction[];
+}
+
+export interface ActionResult {
+  success: boolean;
+  message?: string;
+  data?: any;
+  errors?: Array<{ field?: string; message: string }>;
+}
+
+export interface PluginStats {
+  total: number;
+  enabled: number;
+  disabled: number;
+  byCategory: Record<PluginCategory, number>;
+}
+
+export interface PluginExecutionLog {
+  id: string;
+  pluginId: string;
+  operation: "test" | "execute";
+  action: string | null;
+  userId: string | null;
+  status: "success" | "error";
+  message: string | null;
+  durationMs: number | null;
+  createdAt: string;
+}
