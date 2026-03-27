@@ -19,6 +19,8 @@ import { PEAccountingMockAdapter } from "../integrations/adapters/pe-accounting.
 // Import built-in plugins
 import { GenericRestPlugin } from "./builtin/generic-rest.plugin.js";
 import { WebhookNotificationPlugin } from "./builtin/webhook-notification.plugin.js";
+import { CsvUploadPlugin } from "./builtin/csv-upload.plugin.js";
+import { JiraTempoPlugin } from "./builtin/jira-tempo.plugin.js";
 
 /**
  * Register all built-in plugins.
@@ -53,6 +55,8 @@ function registerBuiltins() {
     // Register new built-in plugins
     pluginRegistry.register(new GenericRestPlugin());
     pluginRegistry.register(new WebhookNotificationPlugin());
+    pluginRegistry.register(new CsvUploadPlugin());
+    pluginRegistry.register(new JiraTempoPlugin());
 
     console.log(`[PluginSystem] Registered ${pluginRegistry.list().length} built-in plugins`);
 }

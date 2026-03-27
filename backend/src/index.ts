@@ -8,7 +8,9 @@ import { entryRouter } from "./routes/entries.js";
 import { exportRouter } from "./routes/export.js";
 import { adminRouter } from "./routes/admin.js";
 import { integrationRouter } from "./routes/integrations.js";
+import { integrationWebhookRouter } from "./routes/integration-webhooks.js";
 import { pluginRouter } from "./routes/plugins.js";
+import { startAutoSyncScheduler } from "./integrations/scheduler.js";
 
 // Initialize plugin system (auto-registers built-in plugins)
 import "./plugins/index.js";
@@ -27,6 +29,7 @@ app.get("/api/health", (_req, res) => {
 // Public routes
 app.use("/api/auth", authRouter);
 app.use("/api/plugins", pluginRouter);  // List plugins (public), test/exec (auth required)
+app.use("/api/integrations/webhooks", integrationWebhookRouter);
 
 // Protected routes
 app.use("/api/projects", authMiddleware, projectRouter);
@@ -36,6 +39,9 @@ app.use("/api/export", authMiddleware, exportRouter);
 // Admin routes (auth + admin role required)
 app.use("/api/admin", authMiddleware, adminMiddleware, adminRouter);
 app.use("/api/admin/integrations", authMiddleware, adminMiddleware, integrationRouter);
+
+// Start the auto-sync scheduler
+startAutoSyncScheduler();
 
 app.listen(PORT, () => {
   console.log(`🚀 Fauke API running on http://localhost:${PORT}`);

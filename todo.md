@@ -85,10 +85,10 @@
 - [ ] Swap Visma mock → real adapter (requires Visma developer registration)
 - [ ] Swap PE Accounting mock → real adapter (requires customer API token)
 - [ ] OAuth callback flow for Fortnox & Visma (redirect + token exchange)
-- [ ] Encrypt integration config at rest (AES-256)
-- [ ] Scheduled auto-sync (cron-like, e.g. nightly)
-- [ ] Webhook receivers for real-time sync triggers
-- [ ] Per-integration rate limiting & retry with exponential backoff
+- [x] Encrypt integration config at rest (AES-256)
+- [x] Scheduled auto-sync (cron-like, e.g. nightly)
+- [x] Webhook receivers for real-time sync triggers
+- [x] Per-integration rate limiting & retry with exponential backoff
 
 ---
 
@@ -97,9 +97,9 @@
 - [x] Plugin registry & config UI
 - [x] Example: generic REST POST plugin
 - [x] Example: webhook notification plugin
-- [ ] Example: CSV-upload plugin
-- [ ] Example: Jira Tempo plugin
-- [ ] Plugin execution log / history
+- [x] Example: CSV-upload plugin
+- [x] Example: Jira Tempo plugin
+- [x] Plugin execution log / history
 
 ## v3.0 — Multi-user (future)
 - [ ] Auth system (OAuth2 / magic link)

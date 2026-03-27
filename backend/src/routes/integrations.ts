@@ -5,14 +5,22 @@
  */
 
 import { Router } from "express";
+import type { Request, Response } from "express";
 import { prisma } from "../db.js";
 import { getAdapter, PROVIDERS, getConfigFields } from "../integrations/registry.js";
 import { ProviderKey, ProviderConfig, SyncTimeEntry } from "../integrations/types.js";
+import {
+  decryptConfig,
+  encryptConfig,
+  maskConfig,
+  mergeMaskedSensitiveValues,
+} from "../integrations/config-crypto.js";
+import { checkRateLimit, withRetry } from "../integrations/resilience.js";
 
 export const integrationRouter = Router();
 
 // ─── Providers metadata (what the admin UI uses to render forms) ───
-integrationRouter.get("/providers", (_req, res) => {
+integrationRouter.get("/providers", (_req: Request, res: Response) => {
   const providers = PROVIDERS.map((p) => ({
     ...p,
     configFields: getConfigFields(p.key),
@@ -21,7 +29,7 @@ integrationRouter.get("/providers", (_req, res) => {
 });
 
 // ─── List all integrations ───
-integrationRouter.get("/", async (_req, res) => {
+integrationRouter.get("/", async (_req: Request, res: Response) => {
   try {
     const integrations = await prisma.integration.findMany({
       include: {
@@ -38,7 +46,7 @@ integrationRouter.get("/", async (_req, res) => {
     // Strip sensitive config values for the listing
     const safe = integrations.map((i: typeof integrations[number]) => ({
       ...i,
-      config: maskConfig(i.config as Record<string, unknown>),
+      config: maskConfig(decryptConfig(i.config)),
       users: i.users.map((ui: typeof i.users[number]) => ({
         id: ui.id,
         externalId: ui.externalId,
@@ -54,7 +62,7 @@ integrationRouter.get("/", async (_req, res) => {
 });
 
 // ─── Get single integration (full config for editing) ───
-integrationRouter.get("/:id", async (req, res) => {
+integrationRouter.get("/:id", async (req: Request, res: Response) => {
   try {
     const integration = await prisma.integration.findUnique({
       where: { id: req.params.id },
@@ -74,6 +82,7 @@ integrationRouter.get("/:id", async (req, res) => {
 
     res.json({
       ...integration,
+      config: maskConfig(decryptConfig(integration.config)),
       users: integration.users.map((ui: typeof integration.users[number]) => ({
         id: ui.id,
         externalId: ui.externalId,
@@ -87,7 +96,7 @@ integrationRouter.get("/:id", async (req, res) => {
 });
 
 // ─── Create integration ───
-integrationRouter.post("/", async (req, res) => {
+integrationRouter.post("/", async (req: Request, res: Response) => {
   try {
     const { provider, name, config } = req.body;
 
@@ -101,11 +110,16 @@ integrationRouter.post("/", async (req, res) => {
       return;
     }
 
+    const encryptedConfig = encryptConfig(config as Record<string, unknown>);
+
     const integration = await prisma.integration.create({
-      data: { provider, name, config },
+      data: { provider, name, config: encryptedConfig },
     });
 
-    res.status(201).json(integration);
+    res.status(201).json({
+      ...integration,
+      config: maskConfig(config as Record<string, unknown>),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to create integration" });
@@ -113,7 +127,7 @@ integrationRouter.post("/", async (req, res) => {
 });
 
 // ─── Update integration ───
-integrationRouter.put("/:id", async (req, res) => {
+integrationRouter.put("/:id", async (req: Request, res: Response) => {
   try {
     const { name, config, enabled } = req.body;
 
@@ -125,7 +139,14 @@ integrationRouter.put("/:id", async (req, res) => {
 
     const data: Record<string, unknown> = {};
     if (name !== undefined) data.name = name;
-    if (config !== undefined) data.config = config;
+    if (config !== undefined) {
+      const existingConfig = decryptConfig(existing.config);
+      const mergedConfig = mergeMaskedSensitiveValues(
+        config as Record<string, unknown>,
+        existingConfig
+      );
+      data.config = encryptConfig(mergedConfig);
+    }
     if (enabled !== undefined) data.enabled = enabled;
 
     const updated = await prisma.integration.update({
@@ -133,7 +154,10 @@ integrationRouter.put("/:id", async (req, res) => {
       data,
     });
 
-    res.json(updated);
+    res.json({
+      ...updated,
+      config: maskConfig(decryptConfig(updated.config)),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to update integration" });
@@ -141,7 +165,7 @@ integrationRouter.put("/:id", async (req, res) => {
 });
 
 // ─── Delete integration ───
-integrationRouter.delete("/:id", async (req, res) => {
+integrationRouter.delete("/:id", async (req: Request, res: Response) => {
   try {
     const existing = await prisma.integration.findUnique({ where: { id: req.params.id } });
     if (!existing) {
@@ -158,7 +182,7 @@ integrationRouter.delete("/:id", async (req, res) => {
 });
 
 // ─── Test connection ───
-integrationRouter.post("/:id/test", async (req, res) => {
+integrationRouter.post("/:id/test", async (req: Request, res: Response) => {
   try {
     const integration = await prisma.integration.findUnique({ where: { id: req.params.id } });
     if (!integration) {
@@ -166,8 +190,20 @@ integrationRouter.post("/:id/test", async (req, res) => {
       return;
     }
 
+    const limit = checkRateLimit(integration.id, "test");
+    if (!limit.allowed) {
+      res.status(429).json({
+        error: "Rate limit exceeded for integration test",
+        retryAfterSeconds: Math.ceil(limit.retryAfterMs / 1000),
+      });
+      return;
+    }
+
     const adapter = getAdapter(integration.provider as ProviderKey);
-    const result = await adapter.testConnection(integration.config as unknown as ProviderConfig);
+    const decryptedConfig = decryptConfig(integration.config);
+    const result = await withRetry(() =>
+      adapter.testConnection(decryptedConfig as unknown as ProviderConfig)
+    );
 
     // Log the test
     await prisma.syncLog.create({
@@ -186,7 +222,7 @@ integrationRouter.post("/:id/test", async (req, res) => {
 });
 
 // ─── Assign users to integration ───
-integrationRouter.post("/:id/users", async (req, res) => {
+integrationRouter.post("/:id/users", async (req: Request, res: Response) => {
   try {
     const { userId, externalId } = req.body;
 
@@ -230,7 +266,7 @@ integrationRouter.post("/:id/users", async (req, res) => {
 });
 
 // ─── Remove user from integration ───
-integrationRouter.delete("/:id/users/:userId", async (req, res) => {
+integrationRouter.delete("/:id/users/:userId", async (req: Request, res: Response) => {
   try {
     await prisma.userIntegration.delete({
       where: {
@@ -248,7 +284,7 @@ integrationRouter.delete("/:id/users/:userId", async (req, res) => {
 });
 
 // ─── Sync time entries for a specific user ───
-integrationRouter.post("/:id/sync", async (req, res) => {
+integrationRouter.post("/:id/sync", async (req: Request, res: Response) => {
   try {
     const { userId, from, to } = req.body;
 
@@ -260,6 +296,15 @@ integrationRouter.post("/:id/sync", async (req, res) => {
     const integration = await prisma.integration.findUnique({ where: { id: req.params.id } });
     if (!integration) {
       res.status(404).json({ error: "Integration not found" });
+      return;
+    }
+
+    const limit = checkRateLimit(integration.id, "sync");
+    if (!limit.allowed) {
+      res.status(429).json({
+        error: "Rate limit exceeded for integration sync",
+        retryAfterSeconds: Math.ceil(limit.retryAfterMs / 1000),
+      });
       return;
     }
 
@@ -303,9 +348,12 @@ integrationRouter.post("/:id/sync", async (req, res) => {
 
     // Execute sync
     const adapter = getAdapter(integration.provider as ProviderKey);
-    const result = await adapter.syncTimeEntries(
-      integration.config as unknown as ProviderConfig,
-      syncEntries
+    const decryptedConfig = decryptConfig(integration.config);
+    const result = await withRetry(() =>
+      adapter.syncTimeEntries(
+        decryptedConfig as unknown as ProviderConfig,
+        syncEntries
+      )
     );
 
     // Log result
@@ -327,7 +375,7 @@ integrationRouter.post("/:id/sync", async (req, res) => {
 });
 
 // ─── Get sync logs for an integration ───
-integrationRouter.get("/:id/logs", async (req, res) => {
+integrationRouter.get("/:id/logs", async (req: Request, res: Response) => {
   try {
     const logs = await prisma.syncLog.findMany({
       where: { integrationId: req.params.id },
@@ -341,18 +389,70 @@ integrationRouter.get("/:id/logs", async (req, res) => {
   }
 });
 
-// ─── Helpers ───
+// ─── Get schedule config for an integration ───
+integrationRouter.get("/:id/schedule", async (req: Request, res: Response) => {
+  try {
+    const integration = await prisma.integration.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        autoSyncEnabled: true,
+        autoSyncTime: true,
+        lastSyncAt: true,
+      },
+    });
 
-/** Mask sensitive values in config for listing responses. */
-function maskConfig(config: Record<string, unknown>): Record<string, unknown> {
-  const sensitiveKeys = ["clientSecret", "accessToken", "refreshToken", "apiToken"];
-  const masked: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(config)) {
-    if (sensitiveKeys.includes(key) && typeof value === "string" && value.length > 0) {
-      masked[key] = value.slice(0, 4) + "••••••••";
-    } else {
-      masked[key] = value;
+    if (!integration) {
+      res.status(404).json({ error: "Integration not found" });
+      return;
     }
+
+    res.json(integration);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch schedule" });
   }
-  return masked;
-}
+});
+
+// ─── Update schedule config for an integration ───
+integrationRouter.put("/:id/schedule", async (req: Request, res: Response) => {
+  try {
+    const { autoSyncEnabled, autoSyncTime } = req.body;
+
+    const integration = await prisma.integration.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!integration) {
+      res.status(404).json({ error: "Integration not found" });
+      return;
+    }
+
+    // Validate autoSyncTime format if provided
+    if (autoSyncTime && !/^\d{2}:\d{2}$/.test(autoSyncTime)) {
+      res.status(400).json({
+        error: "Invalid autoSyncTime format. Use HH:mm (e.g., '02:00')",
+      });
+      return;
+    }
+
+    const updated = await prisma.integration.update({
+      where: { id: req.params.id },
+      data: {
+        autoSyncEnabled: autoSyncEnabled !== undefined ? autoSyncEnabled : integration.autoSyncEnabled,
+        autoSyncTime: autoSyncTime || integration.autoSyncTime,
+      },
+      select: {
+        id: true,
+        autoSyncEnabled: true,
+        autoSyncTime: true,
+        lastSyncAt: true,
+      },
+    });
+
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update schedule" });
+  }
+});
+

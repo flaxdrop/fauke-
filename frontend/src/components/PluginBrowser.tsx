@@ -245,6 +245,7 @@ interface PluginDetailModalProps {
 
 function PluginDetailModal({ plugin, onClose, showToast, loading, onLogUpdated }: PluginDetailModalProps) {
     const [config, setConfig] = useState<Record<string, any>>({});
+    const [actionParams, setActionParams] = useState<Record<string, Record<string, any>>>({});
     const [testing, setTesting] = useState(false);
     const [testResult, setTestResult] = useState<ActionResult | null>(null);
     const [executing, setExecuting] = useState(false);
@@ -273,11 +274,23 @@ function PluginDetailModal({ plugin, onClose, showToast, loading, onLogUpdated }
         }
     };
 
-    const handleExecute = async () => {
-        if (!selectedAction) return;
+    const handleActionParamChange = (actionId: string, key: string, value: any) => {
+        setActionParams((prev) => ({
+            ...prev,
+            [actionId]: {
+                ...(prev[actionId] || {}),
+                [key]: value,
+            },
+        }));
+    };
+
+    const handleExecute = async (actionId: string) => {
+        if (!actionId) return;
+        setSelectedAction(actionId);
         setExecuting(true);
         try {
-            const result = await api.executePluginAction(plugin.metadata.id, selectedAction, config);
+            const params = actionParams[actionId] || undefined;
+            const result = await api.executePluginAction(plugin.metadata.id, actionId, config, params);
             onLogUpdated();
             if (result.success) {
                 showToast(result.message || "Action executed successfully!", "success");
@@ -343,7 +356,7 @@ function PluginDetailModal({ plugin, onClose, showToast, loading, onLogUpdated }
                                     <ConfigFieldInput
                                         key={field.key}
                                         field={field}
-                                        value={config[field.key] || field.default || ""}
+                                        value={config[field.key] ?? field.default ?? (field.type === "checkbox" ? false : "")}
                                         onChange={(value) => handleConfigChange(field.key, value)}
                                     />
                                 ))}
@@ -405,8 +418,7 @@ function PluginDetailModal({ plugin, onClose, showToast, loading, onLogUpdated }
                                             </div>
                                             <button
                                                 onClick={() => {
-                                                    setSelectedAction(action.id);
-                                                    handleExecute();
+                                                    handleExecute(action.id);
                                                 }}
                                                 disabled={executing}
                                                 className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
@@ -419,6 +431,32 @@ function PluginDetailModal({ plugin, onClose, showToast, loading, onLogUpdated }
                                                 Run
                                             </button>
                                         </div>
+                                        {action.params && action.params.length > 0 && (
+                                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-3">
+                                                {action.params.map((field) => (
+                                                    <ConfigFieldInput
+                                                        key={`${action.id}-${field.key}`}
+                                                        field={field}
+                                                        value={
+                                                            actionParams[action.id]?.[field.key] ??
+                                                            field.default ??
+                                                            (field.type === "checkbox" ? false : "")
+                                                        }
+                                                        onChange={(value) =>
+                                                            handleActionParamChange(action.id, field.key, value)
+                                                        }
+                                                    />
+                                                ))}
+                                                <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-3">
+                                                    <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">
+                                                        Payload Preview
+                                                    </p>
+                                                    <pre className="text-xs text-gray-700 dark:text-gray-300 overflow-x-auto whitespace-pre-wrap break-words">
+                                                        {JSON.stringify(actionParams[action.id] || {}, null, 2)}
+                                                    </pre>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>

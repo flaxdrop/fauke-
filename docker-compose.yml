@@ -28,6 +28,13 @@ services:
       DATABASE_URL: postgresql://fauke:fauke_dev@db:5432/fauke?schema=public
       PORT: "3001"
       JWT_SECRET: "fauke-change-this-in-production-2024"
+      FAUKE_CONFIG_ENCRYPTION_KEY: "fauke-dev-config-encryption-key-change-me"
+      FAUKE_WEBHOOK_SECRET: "fauke-dev-webhook-secret-change-me"
+      FAUKE_INTEGRATION_RATE_LIMIT_WINDOW_MS: "60000"
+      FAUKE_INTEGRATION_RATE_LIMIT_TEST_MAX: "10"
+      FAUKE_INTEGRATION_RATE_LIMIT_SYNC_MAX: "5"
+      FAUKE_INTEGRATION_RETRY_COUNT: "2"
+      FAUKE_INTEGRATION_RETRY_INITIAL_DELAY_MS: "300"
     depends_on:
       db:
         condition: service_healthy

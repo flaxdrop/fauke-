@@ -63,17 +63,21 @@ model UserProject {
 // ── Integrations ──────────────────────────────────────────────
 
 model Integration {
-  id          String              @id @default(uuid())
-  provider    String              // "fortnox" | "visma" | "pe_accounting"
-  name        String              // Human label e.g. "Fortnox – Our Company"
-  config      Json                // Provider-specific config (tokens, company id, etc.) – encrypted at rest
-  enabled     Boolean             @default(true)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  users       UserIntegration[]
-  syncLogs    SyncLog[]
+  id               String              @id @default(uuid())
+  provider         String              // "fortnox" | "visma" | "pe_accounting"
+  name             String              // Human label e.g. "Fortnox – Our Company"
+  config           Json                // Provider-specific config (tokens, company id, etc.) – encrypted at rest
+  enabled          Boolean             @default(true)
+  autoSyncEnabled  Boolean             @default(false) // Enable scheduled daily sync
+  autoSyncTime     String?             // HH:mm format, e.g. "02:00" for 2 AM every day
+  lastSyncAt       DateTime?           // Track last completed scheduled sync time
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  users            UserIntegration[]
+  syncLogs         SyncLog[]
 
   @@index([provider])
+  @@index([autoSyncEnabled])
 }
 
 model UserIntegration {
