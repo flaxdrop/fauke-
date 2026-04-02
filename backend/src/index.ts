@@ -9,6 +9,7 @@ import { exportRouter } from "./routes/export.js";
 import { adminRouter } from "./routes/admin.js";
 import { integrationRouter } from "./routes/integrations.js";
 import { integrationWebhookRouter } from "./routes/integration-webhooks.js";
+import { oauthRouter } from "./routes/oauth.js";
 import { pluginRouter } from "./routes/plugins.js";
 import { startAutoSyncScheduler } from "./integrations/scheduler.js";
 
@@ -30,6 +31,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/plugins", pluginRouter);  // List plugins (public), test/exec (auth required)
 app.use("/api/integrations/webhooks", integrationWebhookRouter);
+app.use("/api/integrations/oauth", oauthRouter);  // OAuth authorize (auth required), callback (public)
 
 // Protected routes
 app.use("/api/projects", authMiddleware, projectRouter);

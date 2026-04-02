@@ -35,6 +35,15 @@ services:
       FAUKE_INTEGRATION_RATE_LIMIT_SYNC_MAX: "5"
       FAUKE_INTEGRATION_RETRY_COUNT: "2"
       FAUKE_INTEGRATION_RETRY_INITIAL_DELAY_MS: "300"
+      # Per-provider adapter mode: mock|real (real falls back to mock until implemented)
+      FAUKE_FORTNOX_ADAPTER: "real"
+      FAUKE_VISMA_ADAPTER: "mock"
+      FAUKE_PE_ACCOUNTING_ADAPTER: "mock"
+      # OAuth credentials (get from Fortnox/Visma partner portals, or use dev placeholders)
+      FORTNOX_OAUTH_CLIENT_ID: "dev-fortnox-client-id"
+      FORTNOX_OAUTH_CLIENT_SECRET: "dev-fortnox-client-secret"
+      VISMA_OAUTH_CLIENT_ID: "dev-visma-client-id"
+      VISMA_OAUTH_CLIENT_SECRET: "dev-visma-client-secret"
     depends_on:
       db:
         condition: service_healthy

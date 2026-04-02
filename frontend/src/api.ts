@@ -227,6 +227,20 @@ export const syncIntegration = (integrationId: string, userId: string, from: str
 
 export const getIntegrationLogs = (integrationId: string) =>
   request<SyncLog[]>(`/admin/integrations/${integrationId}/logs`);
+// ── OAuth ──────────────────────────────────────────────────
+
+export const getOAuthAuthorizationUrl = (integrationId: string) =>
+  request<{ authorizationUrl: string }>("/integrations/oauth/authorize", {
+    method: "POST",
+    body: JSON.stringify({ integrationId }),
+  });
+
+export const refreshOAuthToken = (integrationId: string) =>
+  request<{ success: boolean; message: string }>("/integrations/oauth/refresh", {
+    method: "POST",
+    body: JSON.stringify({ integrationId }),
+  });
+
 
 // ── Plugins (v2.0) ────────────────────────────────────────
 

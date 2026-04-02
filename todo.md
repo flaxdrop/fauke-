@@ -84,7 +84,7 @@
 - [ ] Swap Fortnox mock → real adapter (requires Fortnox partner account)
 - [ ] Swap Visma mock → real adapter (requires Visma developer registration)
 - [ ] Swap PE Accounting mock → real adapter (requires customer API token)
-- [ ] OAuth callback flow for Fortnox & Visma (redirect + token exchange)
+- [x] OAuth callback flow for Fortnox & Visma (redirect + token exchange)
 - [x] Encrypt integration config at rest (AES-256)
 - [x] Scheduled auto-sync (cron-like, e.g. nightly)
 - [x] Webhook receivers for real-time sync triggers

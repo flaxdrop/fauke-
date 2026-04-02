@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "npx prisma migrate deploy && tsx src/seed.ts && tsx watch src/index.ts",
     "build": "tsc",
+    "test": "tsx --test src/**/*.test.ts",
     "start": "npx prisma migrate deploy && node dist/seed.js && node dist/index.js",
     "seed": "tsx src/seed.ts",
     "db:migrate": "npx prisma migrate dev",
