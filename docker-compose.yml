@@ -44,6 +44,13 @@ services:
       FORTNOX_OAUTH_CLIENT_SECRET: "dev-fortnox-client-secret"
       VISMA_OAUTH_CLIENT_ID: "dev-visma-client-id"
       VISMA_OAUTH_CLIENT_SECRET: "dev-visma-client-secret"
+      VISMA_API_BASE_URL: "https://api.visma.com"
+      VISMA_TEST_ENDPOINT_PATH: "/v2/shortcuts/hoursworked"
+      VISMA_PAYROLL_SYNC_ENDPOINT_PATH: "/v2/shortcuts/hoursworked"
+      VISMA_BOOKKEEPING_SYNC_ENDPOINT_PATH: "/v2/customerinvoicedrafts"
+      PE_ACCOUNTING_API_BASE_URL: "https://api.peaccounting.se"
+      PE_ACCOUNTING_COMPANY_TEST_PATH: "/api/v1/company/{companyId}"
+      PE_ACCOUNTING_TIME_REGISTRATION_PATH: "/api/v1/company/{companyId}/timeregistration"
     depends_on:
       db:
         condition: service_healthy

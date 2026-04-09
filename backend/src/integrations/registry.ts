@@ -13,7 +13,9 @@
 import { IntegrationAdapter, ProviderKey } from "./types.js";
 import { FortnoxAdapter } from "./adapters/fortnox.js";
 import { FortnoxMockAdapter } from "./adapters/fortnox.mock.js";
+import { VismaAdapter } from "./adapters/visma.js";
 import { VismaMockAdapter } from "./adapters/visma.mock.js";
+import { PEAccountingAdapter } from "./adapters/pe-accounting.js";
 import { PEAccountingMockAdapter } from "./adapters/pe-accounting.mock.js";
 
 type AdapterMode = "mock" | "real";
@@ -34,7 +36,7 @@ function buildFortnoxAdapter(): IntegrationAdapter {
 function buildVismaAdapter(): IntegrationAdapter {
   const mode = resolveAdapterMode(process.env.FAUKE_VISMA_ADAPTER);
   if (mode === "real") {
-    console.warn("[Integrations] FAUKE_VISMA_ADAPTER=real requested, but real adapter is not implemented yet. Falling back to mock.");
+    return new VismaAdapter();
   }
   return new VismaMockAdapter();
 }
@@ -42,7 +44,7 @@ function buildVismaAdapter(): IntegrationAdapter {
 function buildPEAccountingAdapter(): IntegrationAdapter {
   const mode = resolveAdapterMode(process.env.FAUKE_PE_ACCOUNTING_ADAPTER);
   if (mode === "real") {
-    console.warn("[Integrations] FAUKE_PE_ACCOUNTING_ADAPTER=real requested, but real adapter is not implemented yet. Falling back to mock.");
+    return new PEAccountingAdapter();
   }
   return new PEAccountingMockAdapter();
 }
