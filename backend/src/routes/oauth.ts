@@ -17,9 +17,9 @@ import {
     buildAuthorizationUrl,
     generateOAuthState,
     OAUTH_PROVIDERS,
-} from "./oauth-config.js";
-import { decryptConfig, encryptConfig } from "./config-crypto.js";
-import { FortnoxConfig, VismaConfig, ProviderKey } from "./types.js";
+} from "../integrations/oauth-config.js";
+import { decryptConfig, encryptConfig } from "../integrations/config-crypto.js";
+import { FortnoxConfig, VismaConfig, ProviderKey } from "../integrations/types.js";
 
 export const oauthRouter = Router();
 

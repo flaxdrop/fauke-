@@ -1,4 +1,4 @@
-import { Project, TimeEntry, LoginResponse, User, AdminUser, ProviderInfo, Integration, TestResult, SyncResult, SyncLog, Plugin, PluginStats, ActionResult, PluginExecutionLog } from "./types";
+import { Project, TimeEntry, LoginResponse, MagicLinkRequestResponse, User, UserSettings, AdminUser, ProviderInfo, Integration, TestResult, SyncResult, SyncLog, Plugin, PluginStats, ActionResult, PluginExecutionLog } from "./types";
 
 const BASE = "/api";
 
@@ -63,7 +63,36 @@ export const login = (username: string, password: string) =>
     body: JSON.stringify({ username, password }),
   });
 
+export const requestMagicLink = (username: string) =>
+  request<MagicLinkRequestResponse>("/auth/magic-link/request", {
+    method: "POST",
+    body: JSON.stringify({ username }),
+  });
+
+export const exchangeMagicLink = (token: string) =>
+  request<LoginResponse>("/auth/magic-link/exchange", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+
 export const getMe = () => request<User>("/auth/me");
+
+export const getUserSettings = () => request<UserSettings>("/user/settings");
+
+export const updateUserSettings = (data: {
+  email?: string | null;
+  displayName?: string;
+  avatar?: string | null;
+  preferences?: {
+    language: string;
+    timezone: string;
+    emailNotifications: boolean;
+  };
+}) =>
+  request<UserSettings>("/user/settings", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
 
 // Projects
 export const getProjects = () => request<Project[]>("/projects");

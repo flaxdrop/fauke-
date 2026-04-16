@@ -23,6 +23,13 @@ export interface User {
   username: string;
   displayName: string;
   role: string;
+  email?: string | null;
+  avatar?: string | null;
+  preferences?: {
+    language: string;
+    timezone: string;
+    emailNotifications: boolean;
+  };
 }
 
 export interface AdminUser {
@@ -39,7 +46,25 @@ export interface LoginResponse {
   user: User;
 }
 
-export type ViewMode = "calendar" | "table";
+export interface MagicLinkRequestResponse {
+  magicLinkUrl: string;
+  expiresInMinutes: number;
+}
+
+export interface UserSettings {
+  id: string;
+  username: string;
+  email: string | null;
+  displayName: string;
+  avatar: string | null;
+  preferences: {
+    language: string;
+    timezone: string;
+    emailNotifications: boolean;
+  };
+}
+
+export type ViewMode = "calendar" | "table" | "settings";
 
 // ── Integrations ──────────────────────────────────────────
 

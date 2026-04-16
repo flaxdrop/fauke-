@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { authMiddleware, adminMiddleware } from "./auth.js";
 import { authRouter } from "./routes/auth.js";
+import { userRouter } from "./routes/user.js";
 import { projectRouter } from "./routes/projects.js";
 import { entryRouter } from "./routes/entries.js";
 import { exportRouter } from "./routes/export.js";
@@ -37,6 +38,7 @@ app.use("/api/integrations/oauth", oauthRouter);  // OAuth authorize (auth requi
 app.use("/api/projects", authMiddleware, projectRouter);
 app.use("/api/entries", authMiddleware, entryRouter);
 app.use("/api/export", authMiddleware, exportRouter);
+app.use("/api/user", authMiddleware, userRouter);
 
 // Admin routes (auth + admin role required)
 app.use("/api/admin", authMiddleware, adminMiddleware, adminRouter);

@@ -45,6 +45,7 @@ services:
       VISMA_OAUTH_CLIENT_ID: "dev-visma-client-id"
       VISMA_OAUTH_CLIENT_SECRET: "dev-visma-client-secret"
       VISMA_API_BASE_URL: "https://api.visma.com"
+      FAUKE_APP_BASE_URL: "http://localhost:5174"
       VISMA_TEST_ENDPOINT_PATH: "/v2/shortcuts/hoursworked"
       VISMA_PAYROLL_SYNC_ENDPOINT_PATH: "/v2/shortcuts/hoursworked"
       VISMA_BOOKKEEPING_SYNC_ENDPOINT_PATH: "/v2/customerinvoicedrafts"

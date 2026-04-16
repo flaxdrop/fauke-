@@ -37,9 +37,12 @@ model TimeEntry {
 model User {
   id           String              @id @default(uuid())
   username     String              @unique
+  email        String?
   passwordHash String
   displayName  String
+  avatar       String?             // Avatar URL (Gravatar or upload)
   role         String              @default("user")
+  preferences  Json                @default("{\"language\": \"en\", \"timezone\": \"UTC\", \"emailNotifications\": true}")
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
   entries      TimeEntry[]

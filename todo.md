@@ -81,9 +81,9 @@
 - [x] Sensitive field masking with show/hide toggle
 
 ### Production Readiness (future)
-- [ ] Swap Fortnox mock → real adapter (requires Fortnox partner account)
-- [ ] Swap Visma mock → real adapter (requires Visma developer registration)
-- [ ] Swap PE Accounting mock → real adapter (requires customer API token)
+- [x] Swap Fortnox mock → real adapter (requires Fortnox partner account)
+- [x] Swap Visma mock → real adapter (requires Visma developer registration)
+- [x] Swap PE Accounting mock → real adapter (requires customer API token)
 - [x] OAuth callback flow for Fortnox & Visma (redirect + token exchange)
 - [x] Encrypt integration config at rest (AES-256)
 - [x] Scheduled auto-sync (cron-like, e.g. nightly)
@@ -102,7 +102,7 @@
 - [x] Plugin execution log / history
 
 ## v3.0 — Multi-user (future)
-- [ ] Auth system (OAuth2 / magic link)
-- [ ] User settings page
+- [x] Auth system (OAuth2 / magic link)
+- [x] User settings page
 - [ ] Team / org support
 - [ ] Approval workflows
