@@ -1,4 +1,4 @@
-import { Project, TimeEntry, LoginResponse, MagicLinkRequestResponse, User, UserSettings, AdminUser, ProviderInfo, Integration, TestResult, SyncResult, SyncLog, Plugin, PluginStats, ActionResult, PluginExecutionLog } from "./types";
+import { Project, TimeEntry, LoginResponse, MagicLinkRequestResponse, User, UserSettings, AdminUser, Organization, PendingApproval, ProviderInfo, Integration, TestResult, SyncResult, SyncLog, Plugin, PluginStats, ActionResult, PluginExecutionLog } from "./types";
 
 const BASE = "/api";
 
@@ -180,6 +180,48 @@ export const exportPdf = (from?: string, to?: string) => {
 
 // Admin
 export const getAdminUsers = () => request<AdminUser[]>("/admin/users");
+
+export const getAdminOrganizations = () => request<Organization[]>("/admin/organizations");
+
+export const createAdminOrganization = (data: { name: string; approvalRequired?: boolean }) =>
+  request<Organization>("/admin/organizations", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const updateAdminOrganization = (
+  id: string,
+  data: { name?: string; approvalRequired?: boolean }
+) =>
+  request<Organization>(`/admin/organizations/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+
+export const assignUserToOrganization = (
+  organizationId: string,
+  data: { userId: string; organizationRole?: string }
+) =>
+  request<{ success: boolean }>(`/admin/organizations/${organizationId}/users`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const removeUserFromOrganization = (organizationId: string, userId: string) =>
+  request<{ success: boolean }>(`/admin/organizations/${organizationId}/users/${userId}`, {
+    method: "DELETE",
+  });
+
+export const getPendingApprovals = () => request<PendingApproval[]>("/admin/approvals");
+
+export const approveTimeEntry = (id: string) =>
+  request<void>(`/admin/approvals/${id}/approve`, { method: "POST" });
+
+export const rejectTimeEntry = (id: string, note?: string) =>
+  request<void>(`/admin/approvals/${id}/reject`, {
+    method: "POST",
+    body: JSON.stringify({ note }),
+  });
 
 export const createAdminUser = (data: {
   username: string;

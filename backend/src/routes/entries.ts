@@ -3,6 +3,19 @@ import { prisma } from "../db.js";
 
 export const entryRouter = Router();
 
+async function getApprovalStatusForUser(userId: string): Promise<"approved" | "pending"> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      organization: {
+        select: { approvalRequired: true },
+      },
+    },
+  });
+
+  return user?.organization?.approvalRequired ? "pending" : "approved";
+}
+
 // List entries (with optional date range)
 entryRouter.get("/", async (req, res) => {
   try {
@@ -41,6 +54,7 @@ entryRouter.post("/", async (req, res) => {
         note: note || null,
         projectId,
         userId: req.user!.userId,
+        approvalStatus: await getApprovalStatusForUser(req.user!.userId),
       },
       include: { project: true },
     });
@@ -60,6 +74,7 @@ entryRouter.put("/:id", async (req, res) => {
     const existing = await prisma.timeEntry.findFirst({ where: { id, userId } });
     if (!existing) { res.status(404).json({ error: "Entry not found" }); return; }
     const { date, hours, note, projectId } = req.body;
+    const approvalStatus = await getApprovalStatusForUser(userId);
     const entry = await prisma.timeEntry.update({
       where: { id },
       data: {
@@ -67,6 +82,11 @@ entryRouter.put("/:id", async (req, res) => {
         ...(hours !== undefined && { hours }),
         ...(note !== undefined && { note }),
         ...(projectId && { projectId }),
+        approvalStatus,
+        approvedById: null,
+        approvedAt: null,
+        rejectedAt: null,
+        approvalNote: null,
       },
       include: { project: true },
     });

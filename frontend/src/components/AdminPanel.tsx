@@ -14,9 +14,11 @@ import {
   Users,
   Plug,
   Package2,
+  Building2,
 } from "lucide-react";
 import IntegrationsPanel from "./IntegrationsPanel";
 import PluginBrowser from "./PluginBrowser";
+import TeamPanel from "./TeamPanel";
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -44,7 +46,7 @@ export default function AdminPanel({ onClose, showToast }: AdminPanelProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"users" | "integrations" | "plugins">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "teams" | "integrations" | "plugins">("users");
 
   // Form state
   const [formOpen, setFormOpen] = useState(false);
@@ -184,6 +186,16 @@ export default function AdminPanel({ onClose, showToast }: AdminPanelProps) {
             Integrations
           </button>
           <button
+            onClick={() => setActiveTab("teams")}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === "teams"
+              ? "border-brand-500 text-brand-600 dark:text-brand-400"
+              : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+          >
+            <Building2 size={16} />
+            Teams
+          </button>
+          <button
             onClick={() => setActiveTab("plugins")}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === "plugins"
               ? "border-brand-500 text-brand-600 dark:text-brand-400"
@@ -198,6 +210,8 @@ export default function AdminPanel({ onClose, showToast }: AdminPanelProps) {
         <div className="p-6">
           {activeTab === "plugins" ? (
             <PluginBrowser showToast={showToast} />
+          ) : activeTab === "teams" ? (
+            <TeamPanel showToast={showToast} />
           ) : activeTab === "integrations" ? (
             <IntegrationsPanel showToast={showToast} />
           ) : loading ? (
@@ -233,6 +247,9 @@ export default function AdminPanel({ onClose, showToast }: AdminPanelProps) {
                       </th>
                       <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
                         Role
+                      </th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
+                        Organization
                       </th>
                       <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
                         Assigned Projects
@@ -275,6 +292,17 @@ export default function AdminPanel({ onClose, showToast }: AdminPanelProps) {
                             )}
                             {u.role}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
+                          {u.organization ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
+                              <Building2 size={12} />
+                              {u.organization.name}
+                              <span className="opacity-70">· {u.organizationRole || "member"}</span>
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-400">Unassigned</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           {u.projects.length === 0 ? (

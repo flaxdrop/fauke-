@@ -104,5 +104,5 @@
 ## v3.0 — Multi-user (future)
 - [x] Auth system (OAuth2 / magic link)
 - [x] User settings page
-- [ ] Team / org support
-- [ ] Approval workflows
+- [x] Team / org support
+- [x] Approval workflows

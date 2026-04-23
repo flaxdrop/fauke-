@@ -14,6 +14,7 @@ export interface TimeEntry {
   projectId: string;
   project: Project;
   userId: string;
+  approvalStatus?: "approved" | "pending" | "rejected";
   createdAt: string;
   updatedAt: string;
 }
@@ -39,6 +40,38 @@ export interface AdminUser {
   role: string;
   createdAt: string;
   projects: Pick<Project, "id" | "name" | "color">[];
+  organization?: Pick<Organization, "id" | "name"> | null;
+  organizationRole?: string;
+}
+
+export interface OrganizationMember {
+  id: string;
+  username: string;
+  displayName: string;
+  role: string;
+  organizationRole: string;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  approvalRequired: boolean;
+  createdAt: string;
+  updatedAt: string;
+  users: OrganizationMember[];
+  _count?: { users: number; pendingApprovals: number };
+}
+
+export interface PendingApproval {
+  id: string;
+  date: string;
+  hours: number;
+  note: string | null;
+  approvalStatus: "pending";
+  project: Project;
+  user: Pick<AdminUser, "id" | "username" | "displayName" | "role"> & {
+    organization?: Pick<Organization, "id" | "name"> | null;
+  };
 }
 
 export interface LoginResponse {

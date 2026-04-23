@@ -26,12 +26,19 @@ model TimeEntry {
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  approvalStatus String @default("approved")
+  approvedById   String?
+  approvedBy     User?    @relation("TimeEntryApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedAt     DateTime?
+  rejectedAt     DateTime?
+  approvalNote   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([date])
   @@index([projectId])
   @@index([userId])
+  @@index([approvalStatus])
 }
 
 model User {
@@ -42,12 +49,27 @@ model User {
   displayName  String
   avatar       String?             // Avatar URL (Gravatar or upload)
   role         String              @default("user")
+  organizationId String?
+  organization   Organization?     @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organizationRole String          @default("member")
   preferences  Json                @default("{\"language\": \"en\", \"timezone\": \"UTC\", \"emailNotifications\": true}")
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
   entries      TimeEntry[]
   projects     UserProject[]
   integrations UserIntegration[]
+  approvedEntries TimeEntry[]      @relation("TimeEntryApprovedBy")
+}
+
+model Organization {
+  id               String   @id @default(uuid())
+  name             String
+  approvalRequired  Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  users            User[]
+
+  @@index([approvalRequired])
 }
 
 model UserProject {
