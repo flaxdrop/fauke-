@@ -1,4 +1,4 @@
-import { Project, TimeEntry, LoginResponse, User, AdminUser, ProviderInfo, Integration, TestResult, SyncResult, SyncLog } from "./types";
+import { Project, TimeEntry, LoginResponse, MagicLinkRequestResponse, User, UserSettings, AdminUser, Organization, PendingApproval, ProviderInfo, Integration, TestResult, SyncResult, SyncLog, Plugin, PluginStats, ActionResult, PluginExecutionLog } from "./types";
 
 const BASE = "/api";
 
@@ -63,7 +63,36 @@ export const login = (username: string, password: string) =>
     body: JSON.stringify({ username, password }),
   });
 
+export const requestMagicLink = (username: string) =>
+  request<MagicLinkRequestResponse>("/auth/magic-link/request", {
+    method: "POST",
+    body: JSON.stringify({ username }),
+  });
+
+export const exchangeMagicLink = (token: string) =>
+  request<LoginResponse>("/auth/magic-link/exchange", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+
 export const getMe = () => request<User>("/auth/me");
+
+export const getUserSettings = () => request<UserSettings>("/user/settings");
+
+export const updateUserSettings = (data: {
+  email?: string | null;
+  displayName?: string;
+  avatar?: string | null;
+  preferences?: {
+    language: string;
+    timezone: string;
+    emailNotifications: boolean;
+  };
+}) =>
+  request<UserSettings>("/user/settings", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
 
 // Projects
 export const getProjects = () => request<Project[]>("/projects");
@@ -152,6 +181,48 @@ export const exportPdf = (from?: string, to?: string) => {
 // Admin
 export const getAdminUsers = () => request<AdminUser[]>("/admin/users");
 
+export const getAdminOrganizations = () => request<Organization[]>("/admin/organizations");
+
+export const createAdminOrganization = (data: { name: string; approvalRequired?: boolean }) =>
+  request<Organization>("/admin/organizations", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const updateAdminOrganization = (
+  id: string,
+  data: { name?: string; approvalRequired?: boolean }
+) =>
+  request<Organization>(`/admin/organizations/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+
+export const assignUserToOrganization = (
+  organizationId: string,
+  data: { userId: string; organizationRole?: string }
+) =>
+  request<{ success: boolean }>(`/admin/organizations/${organizationId}/users`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+export const removeUserFromOrganization = (organizationId: string, userId: string) =>
+  request<{ success: boolean }>(`/admin/organizations/${organizationId}/users/${userId}`, {
+    method: "DELETE",
+  });
+
+export const getPendingApprovals = () => request<PendingApproval[]>("/admin/approvals");
+
+export const approveTimeEntry = (id: string) =>
+  request<void>(`/admin/approvals/${id}/approve`, { method: "POST" });
+
+export const rejectTimeEntry = (id: string, note?: string) =>
+  request<void>(`/admin/approvals/${id}/reject`, {
+    method: "POST",
+    body: JSON.stringify({ note }),
+  });
+
 export const createAdminUser = (data: {
   username: string;
   password: string;
@@ -227,3 +298,47 @@ export const syncIntegration = (integrationId: string, userId: string, from: str
 
 export const getIntegrationLogs = (integrationId: string) =>
   request<SyncLog[]>(`/admin/integrations/${integrationId}/logs`);
+// ── OAuth ──────────────────────────────────────────────────
+
+export const getOAuthAuthorizationUrl = (integrationId: string) =>
+  request<{ authorizationUrl: string }>("/integrations/oauth/authorize", {
+    method: "POST",
+    body: JSON.stringify({ integrationId }),
+  });
+
+export const refreshOAuthToken = (integrationId: string) =>
+  request<{ success: boolean; message: string }>("/integrations/oauth/refresh", {
+    method: "POST",
+    body: JSON.stringify({ integrationId }),
+  });
+
+
+// ── Plugins (v2.0) ────────────────────────────────────────
+
+export const getPlugins = () =>
+  request<{ plugins: Plugin["metadata"][]; stats: PluginStats }>("/plugins");
+
+export const getPlugin = (id: string) =>
+  request<Plugin>(`/plugins/${id}`);
+
+export const testPlugin = (id: string, config: Record<string, any>) =>
+  request<ActionResult>(`/plugins/${id}/test`, {
+    method: "POST",
+    body: JSON.stringify({ config }),
+  });
+
+export const executePluginAction = (id: string, action: string, config: Record<string, any>, params?: any) =>
+  request<ActionResult>(`/plugins/${id}/execute`, {
+    method: "POST",
+    body: JSON.stringify({ action, config, params }),
+  });
+
+export const getPluginsByCategory = (category: string) =>
+  request<{ plugins: Plugin["metadata"][] }>(`/plugins/category/${category}`);
+
+export const getRecentPluginLogs = (limit = 10, pluginId?: string) => {
+  const params = new URLSearchParams();
+  params.set("limit", String(limit));
+  if (pluginId) params.set("pluginId", pluginId);
+  return request<{ logs: PluginExecutionLog[] }>(`/plugins/logs/recent?${params.toString()}`);
+};

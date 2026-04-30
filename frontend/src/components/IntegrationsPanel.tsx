@@ -27,6 +27,7 @@ import {
   ArrowRightLeft,
   History,
 } from "lucide-react";
+import { useOAuth } from "../hooks/useOAuth";
 
 interface IntegrationsPanelProps {
   showToast: (message: string, type: "success" | "error") => void;
@@ -43,6 +44,9 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const { authorizing, oauthError, oauthSuccess, authorize, clearMessages } = useOAuth(() => {
+    loadData();
+  });
   const [loading, setLoading] = useState(true);
 
   // Create form
@@ -105,6 +109,13 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (oauthError || oauthSuccess) {
+      const timer = setTimeout(() => clearMessages(), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [oauthError, oauthSuccess, clearMessages]);
 
   // ─── Create integration ───
   const handleCreate = async (e: React.FormEvent) => {
@@ -301,6 +312,18 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
         </button>
       </div>
 
+      {oauthError && (
+        <div className="px-4 py-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm">
+          {oauthError}
+        </div>
+      )}
+
+      {oauthSuccess && (
+        <div className="px-4 py-3 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 text-sm">
+          {oauthSuccess}
+        </div>
+      )}
+
       {/* Integration list */}
       {integrations.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
@@ -349,11 +372,10 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
                     {/* Enabled toggle */}
                     <button
                       onClick={() => toggleEnabled(integration)}
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        integration.enabled
+                      className={`p-1.5 rounded-lg transition-colors ${integration.enabled
                           ? "text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20"
                           : "text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-                      }`}
+                        }`}
                       title={integration.enabled ? "Enabled — click to disable" : "Disabled — click to enable"}
                     >
                       {integration.enabled ? <Plug size={16} /> : <Unplug size={16} />}
@@ -413,11 +435,10 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
                 {/* Test result inline */}
                 {testResult && testResult.id === integration.id && (
                   <div
-                    className={`mx-4 mb-3 px-3 py-2 rounded-lg text-xs flex items-center gap-2 ${
-                      testResult.success
+                    className={`mx-4 mb-3 px-3 py-2 rounded-lg text-xs flex items-center gap-2 ${testResult.success
                         ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
                         : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
-                    }`}
+                      }`}
                   >
                     {testResult.success ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
                     {testResult.message}
@@ -505,6 +526,18 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
                           {editSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                           Save Changes
                         </button>
+                        {(integration.provider === "fortnox" || integration.provider === "visma") && (
+                          <button
+                            onClick={() => authorize(integration.id)}
+                            disabled={authorizing === integration.id}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+                          >
+                            {authorizing === integration.id ? (
+                              <Loader2 size={14} className="animate-spin" />
+                            ) : null}
+                            🔐 Authorize with {provider?.label || integration.provider}
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -665,11 +698,10 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
                         });
                         setCreateConfig(cfg);
                       }}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${
-                        createProvider === p.key
+                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${createProvider === p.key
                           ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-600"
                           : "border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-600 dark:text-gray-400"
-                      }`}
+                        }`}
                     >
                       <div
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
@@ -845,13 +877,12 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
                   {logs.map((log) => (
                     <div
                       key={log.id}
-                      className={`px-3 py-2 rounded-lg border text-xs ${
-                        log.status === "success"
+                      className={`px-3 py-2 rounded-lg border text-xs ${log.status === "success"
                           ? "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10"
                           : log.status === "partial"
-                          ? "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/10"
-                          : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10"
-                      }`}
+                            ? "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/10"
+                            : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10"
+                        }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
                         {log.status === "success" ? (

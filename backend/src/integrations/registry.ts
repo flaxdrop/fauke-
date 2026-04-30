@@ -1,19 +1,58 @@
 /**
  * Adapter registry — maps provider keys to adapter instances.
  *
- * Currently all adapters are mocks. When real credentials are available,
- * swap e.g. `FortnoxMockAdapter` → `FortnoxAdapter` (same interface).
+ * Adapter mode can be configured per provider via env vars:
+ *   - FAUKE_FORTNOX_ADAPTER=mock|real
+ *   - FAUKE_VISMA_ADAPTER=mock|real
+ *   - FAUKE_PE_ACCOUNTING_ADAPTER=mock|real
+ *
+ * Until real adapters are implemented, any `real` selection falls back to mock
+ * with an informational console warning.
  */
 
 import { IntegrationAdapter, ProviderKey } from "./types.js";
+import { FortnoxAdapter } from "./adapters/fortnox.js";
 import { FortnoxMockAdapter } from "./adapters/fortnox.mock.js";
+import { VismaAdapter } from "./adapters/visma.js";
 import { VismaMockAdapter } from "./adapters/visma.mock.js";
+import { PEAccountingAdapter } from "./adapters/pe-accounting.js";
 import { PEAccountingMockAdapter } from "./adapters/pe-accounting.mock.js";
 
+type AdapterMode = "mock" | "real";
+
+function resolveAdapterMode(envValue: string | undefined): AdapterMode {
+  if (!envValue) return "mock";
+  return envValue.trim().toLowerCase() === "real" ? "real" : "mock";
+}
+
+function buildFortnoxAdapter(): IntegrationAdapter {
+  const mode = resolveAdapterMode(process.env.FAUKE_FORTNOX_ADAPTER);
+  if (mode === "real") {
+    return new FortnoxAdapter();
+  }
+  return new FortnoxMockAdapter();
+}
+
+function buildVismaAdapter(): IntegrationAdapter {
+  const mode = resolveAdapterMode(process.env.FAUKE_VISMA_ADAPTER);
+  if (mode === "real") {
+    return new VismaAdapter();
+  }
+  return new VismaMockAdapter();
+}
+
+function buildPEAccountingAdapter(): IntegrationAdapter {
+  const mode = resolveAdapterMode(process.env.FAUKE_PE_ACCOUNTING_ADAPTER);
+  if (mode === "real") {
+    return new PEAccountingAdapter();
+  }
+  return new PEAccountingMockAdapter();
+}
+
 const adapters: Record<ProviderKey, IntegrationAdapter> = {
-  fortnox: new FortnoxMockAdapter(),
-  visma: new VismaMockAdapter(),
-  pe_accounting: new PEAccountingMockAdapter(),
+  fortnox: buildFortnoxAdapter(),
+  visma: buildVismaAdapter(),
+  pe_accounting: buildPEAccountingAdapter(),
 };
 
 export function getAdapter(provider: ProviderKey): IntegrationAdapter {

@@ -23,10 +23,35 @@ services:
     restart: unless-stopped
     ports:
       - "3001:3001"
+      - "5555:5555"
     environment:
       DATABASE_URL: postgresql://fauke:fauke_dev@db:5432/fauke?schema=public
       PORT: "3001"
       JWT_SECRET: "fauke-change-this-in-production-2024"
+      FAUKE_CONFIG_ENCRYPTION_KEY: "fauke-dev-config-encryption-key-change-me"
+      FAUKE_WEBHOOK_SECRET: "fauke-dev-webhook-secret-change-me"
+      FAUKE_INTEGRATION_RATE_LIMIT_WINDOW_MS: "60000"
+      FAUKE_INTEGRATION_RATE_LIMIT_TEST_MAX: "10"
+      FAUKE_INTEGRATION_RATE_LIMIT_SYNC_MAX: "5"
+      FAUKE_INTEGRATION_RETRY_COUNT: "2"
+      FAUKE_INTEGRATION_RETRY_INITIAL_DELAY_MS: "300"
+      # Per-provider adapter mode: mock|real (real falls back to mock until implemented)
+      FAUKE_FORTNOX_ADAPTER: "real"
+      FAUKE_VISMA_ADAPTER: "mock"
+      FAUKE_PE_ACCOUNTING_ADAPTER: "mock"
+      # OAuth credentials (get from Fortnox/Visma partner portals, or use dev placeholders)
+      FORTNOX_OAUTH_CLIENT_ID: "dev-fortnox-client-id"
+      FORTNOX_OAUTH_CLIENT_SECRET: "dev-fortnox-client-secret"
+      VISMA_OAUTH_CLIENT_ID: "dev-visma-client-id"
+      VISMA_OAUTH_CLIENT_SECRET: "dev-visma-client-secret"
+      VISMA_API_BASE_URL: "https://api.visma.com"
+      FAUKE_APP_BASE_URL: "http://localhost:5174"
+      VISMA_TEST_ENDPOINT_PATH: "/v2/shortcuts/hoursworked"
+      VISMA_PAYROLL_SYNC_ENDPOINT_PATH: "/v2/shortcuts/hoursworked"
+      VISMA_BOOKKEEPING_SYNC_ENDPOINT_PATH: "/v2/customerinvoicedrafts"
+      PE_ACCOUNTING_API_BASE_URL: "https://api.peaccounting.se"
+      PE_ACCOUNTING_COMPANY_TEST_PATH: "/api/v1/company/{companyId}"
+      PE_ACCOUNTING_TIME_REGISTRATION_PATH: "/api/v1/company/{companyId}/timeregistration"
     depends_on:
       db:
         condition: service_healthy

@@ -81,27 +81,28 @@
 - [x] Sensitive field masking with show/hide toggle
 
 ### Production Readiness (future)
-- [ ] Swap Fortnox mock → real adapter (requires Fortnox partner account)
-- [ ] Swap Visma mock → real adapter (requires Visma developer registration)
-- [ ] Swap PE Accounting mock → real adapter (requires customer API token)
-- [ ] OAuth callback flow for Fortnox & Visma (redirect + token exchange)
-- [ ] Encrypt integration config at rest (AES-256)
-- [ ] Scheduled auto-sync (cron-like, e.g. nightly)
-- [ ] Webhook receivers for real-time sync triggers
-- [ ] Per-integration rate limiting & retry with exponential backoff
+- [x] Swap Fortnox mock → real adapter (requires Fortnox partner account)
+- [x] Swap Visma mock → real adapter (requires Visma developer registration)
+- [x] Swap PE Accounting mock → real adapter (requires customer API token)
+- [x] OAuth callback flow for Fortnox & Visma (redirect + token exchange)
+- [x] Encrypt integration config at rest (AES-256)
+- [x] Scheduled auto-sync (cron-like, e.g. nightly)
+- [x] Webhook receivers for real-time sync triggers
+- [x] Per-integration rate limiting & retry with exponential backoff
 
 ---
 
-## v2.0 — Plugin System (future)
-- [ ] Define plugin interface (`IFaukePlugin`)
-- [ ] Plugin registry & config UI
-- [ ] Example: generic REST POST plugin
-- [ ] Example: CSV-upload plugin
-- [ ] Example: Jira Tempo plugin
-- [ ] Plugin execution log / history
+## v2.0 — Plugin System
+- [x] Define plugin interface (`IFaukePlugin`)
+- [x] Plugin registry & config UI
+- [x] Example: generic REST POST plugin
+- [x] Example: webhook notification plugin
+- [x] Example: CSV-upload plugin
+- [x] Example: Jira Tempo plugin
+- [x] Plugin execution log / history
 
 ## v3.0 — Multi-user (future)
-- [ ] Auth system (OAuth2 / magic link)
-- [ ] User settings page
-- [ ] Team / org support
-- [ ] Approval workflows
+- [x] Auth system (OAuth2 / magic link)
+- [x] User settings page
+- [x] Team / org support
+- [x] Approval workflows

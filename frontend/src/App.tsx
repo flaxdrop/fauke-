@@ -7,6 +7,7 @@ import CalendarView from "./components/CalendarView";
 import TableView from "./components/TableView";
 import EntryModal from "./components/EntryModal";
 import ProjectManager from "./components/ProjectManager";
+import SettingsPage from "./components/SettingsPage";
 import Toast from "./components/Toast";
 import LoginPage from "./components/LoginPage";
 import AdminPanel from "./components/AdminPanel";
@@ -15,6 +16,7 @@ export default function App() {
   // Auth state
   const [user, setUser] = useState<User | null>(api.getSavedUser());
   const [authChecked, setAuthChecked] = useState(false);
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
 
   const [view, setView] = useState<ViewMode>("calendar");
   const [year, setYear] = useState(new Date().getFullYear());
@@ -42,8 +44,35 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Verify token on mount
+  // Verify token / consume magic link on mount
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const magicToken = params.get("magicToken");
+
+    if (magicToken) {
+      setMagicLinkLoading(true);
+      api
+        .exchangeMagicLink(magicToken)
+        .then((res) => {
+          api.setToken(res.token);
+          api.saveUser(res.user);
+          setUser(res.user);
+        })
+        .catch((err) => {
+          console.error(err);
+          api.clearToken();
+          setUser(null);
+          showToast("Magic link expired or invalid", "error");
+        })
+        .finally(() => {
+          params.delete("magicToken");
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setMagicLinkLoading(false);
+          setAuthChecked(true);
+        });
+      return;
+    }
+
     if (!api.isAuthenticated()) {
       setUser(null);
       setAuthChecked(true);
@@ -184,7 +213,7 @@ export default function App() {
 
   // Show login page if not authenticated
   if (!user) {
-    return <LoginPage onLogin={handleLogin} />;
+    return <LoginPage onLogin={handleLogin} onRequestMagicLink={api.requestMagicLink} />;
   }
 
   return (
@@ -200,6 +229,7 @@ export default function App() {
         onExportCsv={handleExportCsv}
         onExportPdf={handleExportPdf}
         onManageProjects={() => setProjectManagerOpen(true)}
+        onOpenSettings={() => setView("settings")}
         onOpenAdmin={() => setAdminPanelOpen(true)}
         user={user}
         onLogout={handleLogout}
@@ -210,6 +240,8 @@ export default function App() {
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" />
           </div>
+        ) : view === "settings" ? (
+          <SettingsPage onBack={() => setView("calendar")} showToast={showToast} />
         ) : view === "calendar" ? (
           <CalendarView
             year={year}

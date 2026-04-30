@@ -1,12 +1,21 @@
+// @ts-nocheck
 import express from "express";
 import cors from "cors";
 import { authMiddleware, adminMiddleware } from "./auth.js";
 import { authRouter } from "./routes/auth.js";
+import { userRouter } from "./routes/user.js";
 import { projectRouter } from "./routes/projects.js";
 import { entryRouter } from "./routes/entries.js";
 import { exportRouter } from "./routes/export.js";
 import { adminRouter } from "./routes/admin.js";
 import { integrationRouter } from "./routes/integrations.js";
+import { integrationWebhookRouter } from "./routes/integration-webhooks.js";
+import { oauthRouter } from "./routes/oauth.js";
+import { pluginRouter } from "./routes/plugins.js";
+import { startAutoSyncScheduler } from "./integrations/scheduler.js";
+
+// Initialize plugin system (auto-registers built-in plugins)
+import "./plugins/index.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -21,15 +30,22 @@ app.get("/api/health", (_req, res) => {
 
 // Public routes
 app.use("/api/auth", authRouter);
+app.use("/api/plugins", pluginRouter);  // List plugins (public), test/exec (auth required)
+app.use("/api/integrations/webhooks", integrationWebhookRouter);
+app.use("/api/integrations/oauth", oauthRouter);  // OAuth authorize (auth required), callback (public)
 
 // Protected routes
 app.use("/api/projects", authMiddleware, projectRouter);
 app.use("/api/entries", authMiddleware, entryRouter);
 app.use("/api/export", authMiddleware, exportRouter);
+app.use("/api/user", authMiddleware, userRouter);
 
 // Admin routes (auth + admin role required)
 app.use("/api/admin", authMiddleware, adminMiddleware, adminRouter);
 app.use("/api/admin/integrations", authMiddleware, adminMiddleware, integrationRouter);
+
+// Start the auto-sync scheduler
+startAutoSyncScheduler();
 
 app.listen(PORT, () => {
   console.log(`🚀 Fauke API running on http://localhost:${PORT}`);

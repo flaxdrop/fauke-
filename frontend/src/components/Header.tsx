@@ -9,6 +9,7 @@ import {
   FileText,
   FolderKanban,
   LogOut,
+  Settings,
   Shield,
 } from "lucide-react";
 
@@ -23,6 +24,7 @@ interface HeaderProps {
   onExportCsv: () => void;
   onExportPdf: () => void;
   onManageProjects: () => void;
+  onOpenSettings: () => void;
   onOpenAdmin?: () => void;
   user: User;
   onLogout: () => void;
@@ -39,6 +41,7 @@ export default function Header({
   onExportCsv,
   onExportPdf,
   onManageProjects,
+  onOpenSettings,
   onOpenAdmin,
   user,
   onLogout,
@@ -85,22 +88,20 @@ export default function Header({
           <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
             <button
               onClick={() => onViewChange("calendar")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                view === "calendar"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${view === "calendar"
                   ? "bg-white dark:bg-gray-700 shadow-sm text-brand-600 dark:text-brand-400"
                   : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-              }`}
+                }`}
             >
               <Calendar size={14} />
               Calendar
             </button>
             <button
               onClick={() => onViewChange("table")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                view === "table"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${view === "table"
                   ? "bg-white dark:bg-gray-700 shadow-sm text-brand-600 dark:text-brand-400"
                   : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-              }`}
+                }`}
             >
               <Table size={14} />
               Table
@@ -115,6 +116,14 @@ export default function Header({
           >
             <FolderKanban size={14} />
             Projects
+          </button>
+
+          <button
+            onClick={onOpenSettings}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <Settings size={14} />
+            Settings
           </button>
 
           <button
