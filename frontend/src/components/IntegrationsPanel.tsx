@@ -320,7 +320,7 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
 
       {oauthSuccess && (
         <div className="px-4 py-3 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 text-sm">
-          {oauthSuccess}
+          Successfully authorized {oauthSuccess.provider} integration.
         </div>
       )}
 
