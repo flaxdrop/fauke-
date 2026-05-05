@@ -153,8 +153,8 @@ integrationWebhookRouter.post("/:integrationId/sync", async (req: Request, res: 
             return;
         }
 
-        let targetAssignments = integration.users.filter(
-            (assignment: typeof integration.users[number]) => Boolean(assignment.externalId)
+        let targetAssignments = (integration as any).users.filter(
+            (assignment: any) => Boolean(assignment.externalId)
         );
 
         if (body.userId) {

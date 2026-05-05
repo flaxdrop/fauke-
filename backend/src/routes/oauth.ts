@@ -94,7 +94,7 @@ oauthRouter.post("/authorize", authMiddleware, adminMiddleware, async (req: Requ
         // Build authorization URL
         const authorizationUrl = buildAuthorizationUrl(
             provider,
-            config.clientId,
+            config.clientId as string,
             oauthProvider.redirectUri,
             state
         );
@@ -189,8 +189,8 @@ oauthRouter.get("/callback/:provider", async (req: Request, res: Response) => {
             body: new URLSearchParams({
                 grant_type: "authorization_code",
                 code,
-                client_id: config.clientId,
-                client_secret: config.clientSecret,
+                client_id: config.clientId as string,
+                client_secret: config.clientSecret as string,
                 redirect_uri: oauthProvider.redirectUri,
             }).toString(),
         });
@@ -223,18 +223,18 @@ oauthRouter.get("/callback/:provider", async (req: Request, res: Response) => {
                 ? ({
                     ...config,
                     accessToken,
-                    refreshToken: refreshToken || (config as FortnoxConfig).refreshToken,
-                } as FortnoxConfig)
+                    refreshToken: refreshToken || (config as unknown as FortnoxConfig).refreshToken,
+                } as unknown as FortnoxConfig)
                 : ({
                     ...config,
                     accessToken,
-                    refreshToken: refreshToken || (config as VismaConfig).refreshToken,
-                } as VismaConfig);
+                    refreshToken: refreshToken || (config as unknown as VismaConfig).refreshToken,
+                } as unknown as VismaConfig);
 
         await prisma.integration.update({
             where: { id: stateData.integrationId },
             data: {
-                config: encryptConfig(updatedConfig),
+                config: encryptConfig(updatedConfig as Record<string, unknown>),
             },
         });
 
@@ -299,9 +299,9 @@ oauthRouter.post("/refresh", authMiddleware, adminMiddleware, async (req: Reques
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({
                 grant_type: "refresh_token",
-                refresh_token: config.refreshToken,
-                client_id: config.clientId,
-                client_secret: config.clientSecret,
+                refresh_token: config.refreshToken as string,
+                client_id: config.clientId as string,
+                client_secret: config.clientSecret as string,
             }).toString(),
         });
 
@@ -327,17 +327,17 @@ oauthRouter.post("/refresh", authMiddleware, adminMiddleware, async (req: Reques
                 ? ({
                     ...config,
                     accessToken: newAccessToken,
-                    refreshToken: newRefreshToken || (config as FortnoxConfig).refreshToken,
-                } as FortnoxConfig)
+                    refreshToken: newRefreshToken || (config as unknown as FortnoxConfig).refreshToken,
+                } as unknown as FortnoxConfig)
                 : ({
                     ...config,
                     accessToken: newAccessToken,
-                    refreshToken: newRefreshToken || (config as VismaConfig).refreshToken,
-                } as VismaConfig);
+                    refreshToken: newRefreshToken || (config as unknown as VismaConfig).refreshToken,
+                } as unknown as VismaConfig);
 
         await prisma.integration.update({
             where: { id: integrationId },
-            data: { config: encryptConfig(updatedConfig) },
+            data: { config: encryptConfig(updatedConfig as Record<string, unknown>) },
         });
 
         console.log(`[OAuth] Successfully refreshed token for ${provider} integration (ID: ${integrationId})`);
