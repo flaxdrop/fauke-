@@ -1,0 +1,37 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy fauke to server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /home/ubuntu/fauke
+
+            echo "==> Pulling latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "==> Building containers..."
+            sudo docker compose -f docker-compose.prod.yml build
+
+            echo "==> Starting containers..."
+            sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            echo "==> Running database migrations..."
+            sudo docker compose -f docker-compose.prod.yml exec -T backend npx prisma migrate deploy
+
+            echo "==> Done. Fauke is live at https://fauke.dancingsalamanders.com"
