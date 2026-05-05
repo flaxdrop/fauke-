@@ -109,7 +109,7 @@ async function syncSingleUser(params: {
     return result;
 }
 
-integrationWebhookRouter.post("/:integrationId/sync", async (req: Request, res: Response) => {
+integrationWebhookRouter.post("/:integrationId/sync", async (req: Request<{ integrationId: string }>, res: Response) => {
     try {
         const configuredSecret = process.env.FAUKE_WEBHOOK_SECRET;
         if (!configuredSecret) {

@@ -234,7 +234,7 @@ oauthRouter.get("/callback/:provider", async (req: Request, res: Response) => {
         await prisma.integration.update({
             where: { id: stateData.integrationId },
             data: {
-                config: encryptConfig(updatedConfig as Record<string, unknown>),
+                config: encryptConfig(updatedConfig as Record<string, unknown>) as any,
             },
         });
 
@@ -337,7 +337,7 @@ oauthRouter.post("/refresh", authMiddleware, adminMiddleware, async (req: Reques
 
         await prisma.integration.update({
             where: { id: integrationId },
-            data: { config: encryptConfig(updatedConfig as Record<string, unknown>) },
+            data: { config: encryptConfig(updatedConfig as Record<string, unknown>) as any },
         });
 
         console.log(`[OAuth] Successfully refreshed token for ${provider} integration (ID: ${integrationId})`);
