@@ -377,10 +377,20 @@ integrationRouter.post("/:id/sync", async (req: Request, res: Response) => {
 // ─── Get sync logs for an integration ───
 integrationRouter.get("/:id/logs", async (req: Request, res: Response) => {
   try {
+    const { status, userId, take } = req.query as Record<string, string | undefined>;
+
+    const where: Record<string, unknown> = { integrationId: req.params.id };
+    if (status && (status === "success" || status === "partial" || status === "error")) {
+      Object.assign(where, { status });
+    }
+    if (userId) Object.assign(where, { userId });
+
+    const limit = Math.min(Number(take || "50"), 200);
+
     const logs = await prisma.syncLog.findMany({
-      where: { integrationId: req.params.id },
+      where,
       orderBy: { createdAt: "desc" },
-      take: 50,
+      take: limit || 50,
     });
     res.json(logs);
   } catch (err) {

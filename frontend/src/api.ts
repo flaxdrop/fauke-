@@ -296,8 +296,12 @@ export const syncIntegration = (integrationId: string, userId: string, from: str
     body: JSON.stringify({ userId, from, to }),
   });
 
-export const getIntegrationLogs = (integrationId: string) =>
-  request<SyncLog[]>(`/admin/integrations/${integrationId}/logs`);
+export const getIntegrationLogs = (integrationId: string, status?: string) => {
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  const qs = params.toString();
+  return request<SyncLog[]>(`/admin/integrations/${integrationId}/logs${qs ? `?${qs}` : ""}`);
+};
 // ── OAuth ──────────────────────────────────────────────────
 
 export const getOAuthAuthorizationUrl = (integrationId: string) =>

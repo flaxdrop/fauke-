@@ -81,6 +81,7 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
   const [logsOpen, setLogsOpen] = useState<string | null>(null);
   const [logs, setLogs] = useState<SyncLog[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [logsStatus, setLogsStatus] = useState<string>("");
 
   // Visible passwords
   const [visibleFields, setVisibleFields] = useState<Set<string>>(new Set());
@@ -247,17 +248,22 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
   };
 
   // ─── Logs ───
-  const openLogs = async (integrationId: string) => {
-    setLogsOpen(integrationId);
+  const fetchLogs = async (integrationId: string, status?: string) => {
     setLogsLoading(true);
     try {
-      const data = await api.getIntegrationLogs(integrationId);
+      const data = await api.getIntegrationLogs(integrationId, status);
       setLogs(data);
     } catch {
       showToast("Failed to load logs", "error");
     } finally {
       setLogsLoading(false);
     }
+  };
+
+  const openLogs = async (integrationId: string) => {
+    setLogsOpen(integrationId);
+    // use current selected status when opening
+    await fetchLogs(integrationId, logsStatus || undefined);
   };
 
   // ─── Expand / collapse ───
@@ -373,8 +379,8 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
                     <button
                       onClick={() => toggleEnabled(integration)}
                       className={`p-1.5 rounded-lg transition-colors ${integration.enabled
-                          ? "text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20"
-                          : "text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        ? "text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20"
+                        : "text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                         }`}
                       title={integration.enabled ? "Enabled — click to disable" : "Disabled — click to enable"}
                     >
@@ -436,8 +442,8 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
                 {testResult && testResult.id === integration.id && (
                   <div
                     className={`mx-4 mb-3 px-3 py-2 rounded-lg text-xs flex items-center gap-2 ${testResult.success
-                        ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
-                        : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
+                      ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
+                      : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
                       }`}
                   >
                     {testResult.success ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
@@ -699,8 +705,8 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
                         setCreateConfig(cfg);
                       }}
                       className={`flex flex-col items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all ${createProvider === p.key
-                          ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-600"
-                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-600 dark:text-gray-400"
+                        ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20 text-brand-600"
+                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300 text-gray-600 dark:text-gray-400"
                         }`}
                     >
                       <div
@@ -854,10 +860,33 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-900 w-full max-w-2xl mx-4 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-              <h3 className="text-base font-semibold flex items-center gap-2">
-                <History size={16} />
-                Sync Logs
-              </h3>
+              <div className="flex items-center gap-3">
+                <h3 className="text-base font-semibold flex items-center gap-2">
+                  <History size={16} />
+                  Sync Logs
+                </h3>
+                <select
+                  value={logsStatus}
+                  onChange={async (e) => {
+                    const val = e.target.value;
+                    setLogsStatus(val);
+                    if (logsOpen) await fetchLogs(logsOpen, val || undefined);
+                  }}
+                  className="text-sm px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                >
+                  <option value="">All</option>
+                  <option value="success">Success</option>
+                  <option value="partial">Partial</option>
+                  <option value="error">Error</option>
+                </select>
+                <button
+                  onClick={async () => logsOpen && (await fetchLogs(logsOpen, logsStatus || undefined))}
+                  title="Refresh"
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <RefreshCw size={14} />
+                </button>
+              </div>
               <button
                 onClick={() => setLogsOpen(null)}
                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -878,10 +907,10 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
                     <div
                       key={log.id}
                       className={`px-3 py-2 rounded-lg border text-xs ${log.status === "success"
-                          ? "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10"
-                          : log.status === "partial"
-                            ? "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/10"
-                            : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10"
+                        ? "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10"
+                        : log.status === "partial"
+                          ? "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/10"
+                          : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10"
                         }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
