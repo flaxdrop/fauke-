@@ -134,6 +134,8 @@ export interface Integration {
   updatedAt: string;
   users: IntegrationUser[];
   _count?: { syncLogs: number };
+  lastSyncAt?: string | null;
+  lastSyncStatus?: "success" | "error" | "partial" | null;
 }
 
 export interface SyncLog {

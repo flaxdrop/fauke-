@@ -367,6 +367,19 @@ export default function IntegrationsPanel({ showToast }: IntegrationsPanelProps)
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm truncate">{integration.name}</span>
                       <span className="text-xs text-gray-400">{provider?.label}</span>
+                      {integration.lastSyncStatus && (
+                        <span className="ml-2 flex items-center gap-2 text-xs">
+                          <span
+                            className={`w-2 h-2 rounded-full inline-block ${integration.lastSyncStatus === "success"
+                                ? "bg-green-500"
+                                : integration.lastSyncStatus === "partial"
+                                  ? "bg-amber-500"
+                                  : "bg-red-500"
+                              }`}
+                          />
+                          <span className="text-gray-500 capitalize">{integration.lastSyncStatus}</span>
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
                       <span>{integration.users.length} user{integration.users.length !== 1 ? "s" : ""}</span>

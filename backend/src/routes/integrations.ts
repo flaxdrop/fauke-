@@ -39,20 +39,26 @@ integrationRouter.get("/", async (_req: Request, res: Response) => {
           },
         },
         _count: { select: { syncLogs: true } },
+        syncLogs: { orderBy: { createdAt: "desc" }, take: 1 },
       },
       orderBy: { createdAt: "asc" },
     });
 
     // Strip sensitive config values for the listing
-    const safe = integrations.map((i: typeof integrations[number]) => ({
-      ...i,
-      config: maskConfig(decryptConfig(i.config)),
-      users: i.users.map((ui: typeof i.users[number]) => ({
-        id: ui.id,
-        externalId: ui.externalId,
-        user: ui.user,
-      })),
-    }));
+    const safe = integrations.map((i: typeof integrations[number]) => {
+      const latest = (i as any).syncLogs && (i as any).syncLogs[0];
+      return {
+        ...i,
+        config: maskConfig(decryptConfig(i.config)),
+        users: i.users.map((ui: typeof i.users[number]) => ({
+          id: ui.id,
+          externalId: ui.externalId,
+          user: ui.user,
+        })),
+        lastSyncAt: latest ? latest.createdAt : null,
+        lastSyncStatus: latest ? latest.status : null,
+      };
+    });
 
     res.json(safe);
   } catch (err) {
