@@ -1,5 +1,6 @@
 import { ViewMode, User } from "../types";
 import { MONTH_NAMES } from "../dateUtils";
+import { useEffect, useState } from "react";
 import {
   Calendar,
   Table,
@@ -11,7 +12,10 @@ import {
   LogOut,
   Settings,
   Shield,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { toggleTheme, getCurrentAppliedTheme } from "../theme";
 
 interface HeaderProps {
   view: ViewMode;
@@ -46,6 +50,37 @@ export default function Header({
   user,
   onLogout,
 }: HeaderProps) {
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    try {
+      return getCurrentAppliedTheme();
+    } catch {
+      return "light";
+    }
+  });
+
+  useEffect(() => {
+    const onChange = () => setTheme(getCurrentAppliedTheme());
+    const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
+    try {
+      mq?.addEventListener("change", onChange);
+    } catch {
+      // some browsers use addListener
+      mq?.addListener?.(onChange as any);
+    }
+    return () => {
+      try {
+        mq?.removeEventListener("change", onChange);
+      } catch {
+        mq?.removeListener?.(onChange as any);
+      }
+    };
+  }, []);
+
+  const handleToggleTheme = () => {
+    const next = toggleTheme();
+    setTheme(next);
+  };
+
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 md:px-6 py-3">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -89,8 +124,8 @@ export default function Header({
             <button
               onClick={() => onViewChange("calendar")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${view === "calendar"
-                  ? "bg-white dark:bg-gray-700 shadow-sm text-brand-600 dark:text-brand-400"
-                  : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                ? "bg-white dark:bg-gray-700 shadow-sm text-brand-600 dark:text-brand-400"
+                : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                 }`}
             >
               <Calendar size={14} />
@@ -99,8 +134,8 @@ export default function Header({
             <button
               onClick={() => onViewChange("table")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${view === "table"
-                  ? "bg-white dark:bg-gray-700 shadow-sm text-brand-600 dark:text-brand-400"
-                  : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                ? "bg-white dark:bg-gray-700 shadow-sm text-brand-600 dark:text-brand-400"
+                : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                 }`}
             >
               <Table size={14} />
@@ -124,6 +159,15 @@ export default function Header({
           >
             <Settings size={14} />
             Settings
+          </button>
+
+          {/* Theme toggle */}
+          <button
+            onClick={handleToggleTheme}
+            title="Toggle theme"
+            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
           </button>
 
           <button

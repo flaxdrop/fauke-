@@ -242,24 +242,30 @@ export default function App() {
           </div>
         ) : view === "settings" ? (
           <SettingsPage onBack={() => setView("calendar")} showToast={showToast} />
-        ) : view === "calendar" ? (
-          <CalendarView
-            year={year}
-            month={month}
-            entries={entries}
-            projects={projects}
-            onDayClick={handleDayClick}
-            onEntryClick={handleEditEntry}
-          />
         ) : (
-          <TableView
-            year={year}
-            month={month}
-            entries={entries}
-            projects={projects}
-            onCellClick={handleDayClick}
-            onEntryClick={handleEditEntry}
-          />
+          <div className="view-stack h-full">
+            <div className={`view-pane ${view === "calendar" ? "active" : ""}`}>
+              <CalendarView
+                year={year}
+                month={month}
+                entries={entries}
+                projects={projects}
+                onDayClick={handleDayClick}
+                onEntryClick={handleEditEntry}
+              />
+            </div>
+
+            <div className={`view-pane ${view === "table" ? "active" : ""}`}>
+              <TableView
+                year={year}
+                month={month}
+                entries={entries}
+                projects={projects}
+                onCellClick={handleDayClick}
+                onEntryClick={handleEditEntry}
+              />
+            </div>
+          </div>
         )}
       </main>
 

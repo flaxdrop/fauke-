@@ -6,13 +6,38 @@
   * {
     @apply transition-colors duration-150;
   }
+
   ::-webkit-scrollbar {
     @apply w-2;
   }
+
   ::-webkit-scrollbar-track {
     @apply bg-transparent;
   }
+
   ::-webkit-scrollbar-thumb {
     @apply bg-gray-300 dark:bg-gray-700 rounded-full;
   }
+}
+
+/* Cross-fade utilities for view transitions */
+.view-stack {
+  position: relative;
+}
+
+.view-stack>.view-pane {
+  position: absolute;
+  inset: 0;
+  transition: opacity 240ms ease, transform 240ms ease, visibility 240ms;
+  opacity: 0;
+  transform: translateY(6px) scale(0.995);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.view-stack>.view-pane.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  visibility: visible;
+  pointer-events: auto;
 }

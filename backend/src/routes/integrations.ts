@@ -39,20 +39,26 @@ integrationRouter.get("/", async (_req: Request, res: Response) => {
           },
         },
         _count: { select: { syncLogs: true } },
+        syncLogs: { orderBy: { createdAt: "desc" }, take: 1 },
       },
       orderBy: { createdAt: "asc" },
     });
 
     // Strip sensitive config values for the listing
-    const safe = integrations.map((i: typeof integrations[number]) => ({
-      ...i,
-      config: maskConfig(decryptConfig(i.config)),
-      users: i.users.map((ui: typeof i.users[number]) => ({
-        id: ui.id,
-        externalId: ui.externalId,
-        user: ui.user,
-      })),
-    }));
+    const safe = integrations.map((i: typeof integrations[number]) => {
+      const latest = (i as any).syncLogs && (i as any).syncLogs[0];
+      return {
+        ...i,
+        config: maskConfig(decryptConfig(i.config)),
+        users: i.users.map((ui: typeof i.users[number]) => ({
+          id: ui.id,
+          externalId: ui.externalId,
+          user: ui.user,
+        })),
+        lastSyncAt: latest ? latest.createdAt : null,
+        lastSyncStatus: latest ? latest.status : null,
+      };
+    });
 
     res.json(safe);
   } catch (err) {
@@ -377,10 +383,20 @@ integrationRouter.post("/:id/sync", async (req: Request, res: Response) => {
 // ─── Get sync logs for an integration ───
 integrationRouter.get("/:id/logs", async (req: Request, res: Response) => {
   try {
+    const { status, userId, take } = req.query as Record<string, string | undefined>;
+
+    const where: Record<string, unknown> = { integrationId: req.params.id };
+    if (status && (status === "success" || status === "partial" || status === "error")) {
+      Object.assign(where, { status });
+    }
+    if (userId) Object.assign(where, { userId });
+
+    const limit = Math.min(Number(take || "50"), 200);
+
     const logs = await prisma.syncLog.findMany({
-      where: { integrationId: req.params.id },
+      where,
       orderBy: { createdAt: "desc" },
-      take: 50,
+      take: limit || 50,
     });
     res.json(logs);
   } catch (err) {
