@@ -68,7 +68,7 @@ integrationRouter.get("/", async (_req: Request, res: Response) => {
 });
 
 // ─── Get single integration (full config for editing) ───
-integrationRouter.get("/:id", async (req: Request, res: Response) => {
+integrationRouter.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
   try {
     const integration = await prisma.integration.findUnique({
       where: { id: req.params.id },
@@ -89,7 +89,7 @@ integrationRouter.get("/:id", async (req: Request, res: Response) => {
     res.json({
       ...integration,
       config: maskConfig(decryptConfig(integration.config)),
-      users: integration.users.map((ui: typeof integration.users[number]) => ({
+      users: (integration as any).users.map((ui: any) => ({
         id: ui.id,
         externalId: ui.externalId,
         user: ui.user,
@@ -119,7 +119,7 @@ integrationRouter.post("/", async (req: Request, res: Response) => {
     const encryptedConfig = encryptConfig(config as Record<string, unknown>);
 
     const integration = await prisma.integration.create({
-      data: { provider, name, config: encryptedConfig },
+      data: { provider, name, config: encryptedConfig as any },
     });
 
     res.status(201).json({
@@ -133,7 +133,7 @@ integrationRouter.post("/", async (req: Request, res: Response) => {
 });
 
 // ─── Update integration ───
-integrationRouter.put("/:id", async (req: Request, res: Response) => {
+integrationRouter.put("/:id", async (req: Request<{ id: string }>, res: Response) => {
   try {
     const { name, config, enabled } = req.body;
 
@@ -171,7 +171,7 @@ integrationRouter.put("/:id", async (req: Request, res: Response) => {
 });
 
 // ─── Delete integration ───
-integrationRouter.delete("/:id", async (req: Request, res: Response) => {
+integrationRouter.delete("/:id", async (req: Request<{ id: string }>, res: Response) => {
   try {
     const existing = await prisma.integration.findUnique({ where: { id: req.params.id } });
     if (!existing) {
@@ -188,7 +188,7 @@ integrationRouter.delete("/:id", async (req: Request, res: Response) => {
 });
 
 // ─── Test connection ───
-integrationRouter.post("/:id/test", async (req: Request, res: Response) => {
+integrationRouter.post("/:id/test", async (req: Request<{ id: string }>, res: Response) => {
   try {
     const integration = await prisma.integration.findUnique({ where: { id: req.params.id } });
     if (!integration) {
@@ -228,7 +228,7 @@ integrationRouter.post("/:id/test", async (req: Request, res: Response) => {
 });
 
 // ─── Assign users to integration ───
-integrationRouter.post("/:id/users", async (req: Request, res: Response) => {
+integrationRouter.post("/:id/users", async (req: Request<{ id: string }>, res: Response) => {
   try {
     const { userId, externalId } = req.body;
 
@@ -263,7 +263,7 @@ integrationRouter.post("/:id/users", async (req: Request, res: Response) => {
     res.json({
       id: assignment.id,
       externalId: assignment.externalId,
-      user: assignment.user,
+      user: (assignment as any).user,
     });
   } catch (err) {
     console.error(err);
@@ -272,7 +272,7 @@ integrationRouter.post("/:id/users", async (req: Request, res: Response) => {
 });
 
 // ─── Remove user from integration ───
-integrationRouter.delete("/:id/users/:userId", async (req: Request, res: Response) => {
+integrationRouter.delete("/:id/users/:userId", async (req: Request<{ id: string; userId: string }>, res: Response) => {
   try {
     await prisma.userIntegration.delete({
       where: {
@@ -290,7 +290,7 @@ integrationRouter.delete("/:id/users/:userId", async (req: Request, res: Respons
 });
 
 // ─── Sync time entries for a specific user ───
-integrationRouter.post("/:id/sync", async (req: Request, res: Response) => {
+integrationRouter.post("/:id/sync", async (req: Request<{ id: string }>, res: Response) => {
   try {
     const { userId, from, to } = req.body;
 
@@ -381,7 +381,7 @@ integrationRouter.post("/:id/sync", async (req: Request, res: Response) => {
 });
 
 // ─── Get sync logs for an integration ───
-integrationRouter.get("/:id/logs", async (req: Request, res: Response) => {
+integrationRouter.get("/:id/logs", async (req: Request<{ id: string }>, res: Response) => {
   try {
     const { status, userId, take } = req.query as Record<string, string | undefined>;
 
@@ -406,7 +406,7 @@ integrationRouter.get("/:id/logs", async (req: Request, res: Response) => {
 });
 
 // ─── Get schedule config for an integration ───
-integrationRouter.get("/:id/schedule", async (req: Request, res: Response) => {
+integrationRouter.get("/:id/schedule", async (req: Request<{ id: string }>, res: Response) => {
   try {
     const integration = await prisma.integration.findUnique({
       where: { id: req.params.id },
@@ -431,7 +431,7 @@ integrationRouter.get("/:id/schedule", async (req: Request, res: Response) => {
 });
 
 // ─── Update schedule config for an integration ───
-integrationRouter.put("/:id/schedule", async (req: Request, res: Response) => {
+integrationRouter.put("/:id/schedule", async (req: Request<{ id: string }>, res: Response) => {
   try {
     const { autoSyncEnabled, autoSyncTime } = req.body;
 
